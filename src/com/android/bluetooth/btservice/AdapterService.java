@@ -2484,6 +2484,16 @@ public class AdapterService extends Service {
         }
 
         @Override
+        public void updateQuietModeStatus(boolean quietMode) {
+            AdapterService service = getService();
+            if (service == null) {
+                return;
+            }
+            service.updateQuietModeStatus(quietMode);
+        }
+
+
+        @Override
         public void onBrEdrDown(AttributionSource source) {
             AdapterService service = getService();
             if (service == null
@@ -3284,6 +3294,12 @@ public class AdapterService extends Service {
 
     public int getTotalNumOfTrackableAdvertisements() {
         return mAdapterProperties.getTotalNumOfTrackableAdvertisements();
+    }
+
+    void updateQuietModeStatus(boolean quietMode) {
+        debugLog("updateQuietModeStatus()-updateQuietModeStatus called with quiet mode status:"
+                   + quietMode);
+        mQuietmode = quietMode;
     }
 
     private static int convertScanModeToHal(int mode) {

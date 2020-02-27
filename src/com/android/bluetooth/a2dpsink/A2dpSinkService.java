@@ -75,6 +75,17 @@ public class A2dpSinkService extends ProfileService {
         return sService;
     }
 
+    /**
+     * Testing API to inject a mockA2dpSinkService.
+     * @hide
+     */
+    @VisibleForTesting
+    public static void setA2dpSinkService(A2dpSinkService service) {
+        sService = service;
+        sService.mA2dpSinkStreamHandler = new A2dpSinkStreamHandler(sService, sService);
+    }
+
+
     public A2dpSinkService() {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
     }
@@ -306,7 +317,16 @@ public class A2dpSinkService extends ProfileService {
         return deviceList;
     }
 
-    synchronized int getConnectionState(BluetoothDevice device) {
+    /**
+     * Get the current connection state of the profile
+     *
+     * @param device is the remote bluetooth device
+     * @return {@link BluetoothProfile#STATE_DISCONNECTED} if this profile is disconnected,
+     * {@link BluetoothProfile#STATE_CONNECTING} if this profile is being connected,
+     * {@link BluetoothProfile#STATE_CONNECTED} if this profile is connected, or
+     * {@link BluetoothProfile#STATE_DISCONNECTING} if this profile is being disconnected
+     */
+    public synchronized int getConnectionState(BluetoothDevice device) {
         A2dpSinkStateMachine stateMachine = mDeviceStateMap.get(device);
         return (stateMachine == null) ? BluetoothProfile.STATE_DISCONNECTED
                 : stateMachine.getState();
@@ -328,7 +348,8 @@ public class A2dpSinkService extends ProfileService {
      * @return true if connectionPolicy is set, false on error
      */
     public boolean setConnectionPolicy(BluetoothDevice device, int connectionPolicy) {
-        enforceCallingOrSelfPermission(BLUETOOTH_ADMIN_PERM, "Need BLUETOOTH_ADMIN permission");
+        enforceCallingOrSelfPermission(
+                BLUETOOTH_PRIVILEGED, "Need BLUETOOTH_PRIVILEGED permission");
         if (DBG) {
             Log.d(TAG, "Saved connectionPolicy " + device + " = " + connectionPolicy);
         }
@@ -349,7 +370,8 @@ public class A2dpSinkService extends ProfileService {
      * @return connection policy of the specified device
      */
     public int getConnectionPolicy(BluetoothDevice device) {
-        enforceCallingOrSelfPermission(BLUETOOTH_ADMIN_PERM, "Need BLUETOOTH_ADMIN permission");
+        enforceCallingOrSelfPermission(
+                BLUETOOTH_PRIVILEGED, "Need BLUETOOTH_PRIVILEGED permission");
         return AdapterService.getAdapterService().getDatabase()
                 .getProfileConnectionPolicy(device, BluetoothProfile.A2DP_SINK);
     }
@@ -376,7 +398,8 @@ public class A2dpSinkService extends ProfileService {
     }
 
     boolean isA2dpPlaying(BluetoothDevice device) {
-        enforceCallingOrSelfPermission(BLUETOOTH_PERM, "Need BLUETOOTH permission");
+        enforceCallingOrSelfPermission(
+                BLUETOOTH_PRIVILEGED, "Need BLUETOOTH_PRIVILEGED permission");
         return mA2dpSinkStreamHandler.isPlaying();
     }
 
@@ -400,6 +423,17 @@ public class A2dpSinkService extends ProfileService {
     native boolean connectA2dpNative(byte[] address);
 
     native boolean disconnectA2dpNative(byte[] address);
+
+    /**
+     * set A2DP state machine as the active device
+     * the active device is the only one that will receive passthrough commands and the only one
+     * that will have its audio decoded
+     *
+     * @hide
+     * @param address
+     * @return active device request has been scheduled
+     */
+    public native boolean setActiveDeviceNative(byte[] address);
 
     /**
      * inform A2DP decoder of the current audio focus

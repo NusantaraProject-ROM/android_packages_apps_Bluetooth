@@ -2205,6 +2205,15 @@ public class AdapterService extends Service {
             service.mAdapterStateMachine.sendMessage(AdapterState.BLE_TURN_OFF);
         }
 
+        public int setSocketOpt(int type, int channel, int optionName, byte [] optionVal,
+                                                    int optionLen) {
+            return -1;
+        }
+
+        public int getSocketOpt(int type, int channel, int optionName, byte [] optionVal) {
+            return -1;
+        }
+
         @Override
         public void dump(FileDescriptor fd, String[] args) {
             PrintWriter writer = new PrintWriter(new FileOutputStream(fd));

@@ -22,6 +22,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.Resources.NotFoundException;
+import android.provider.Settings;
 import android.util.Log;
 
 import com.android.bluetooth.R;
@@ -219,6 +220,31 @@ class A2dpCodecConfig {
         if ((value >= BluetoothCodecConfig.CODEC_PRIORITY_DISABLED) && (value
                 < BluetoothCodecConfig.CODEC_PRIORITY_HIGHEST)) {
             mA2dpSourceCodecPriorityLdac = value;
+        }
+
+        // Set highest codec priority in the end, so that it can override xml values
+        int codec_priority = Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.A2DP_SOURCE_CODEC_PRIORITY, 0);
+
+        switch (codec_priority) {
+            case 0:
+            default:
+                break;
+            case 1:
+                mA2dpSourceCodecPrioritySbc = BluetoothCodecConfig.CODEC_PRIORITY_HIGHEST;
+                break;
+            case 2:
+                mA2dpSourceCodecPriorityAac = BluetoothCodecConfig.CODEC_PRIORITY_HIGHEST;
+                break;
+            case 3:
+                mA2dpSourceCodecPriorityAptx = BluetoothCodecConfig.CODEC_PRIORITY_HIGHEST;
+                break;
+            case 4:
+                mA2dpSourceCodecPriorityAptxHd = BluetoothCodecConfig.CODEC_PRIORITY_HIGHEST;
+                break;
+            case 5:
+                mA2dpSourceCodecPriorityLdac = BluetoothCodecConfig.CODEC_PRIORITY_HIGHEST;
+                break;
         }
 
         BluetoothCodecConfig codecConfig;

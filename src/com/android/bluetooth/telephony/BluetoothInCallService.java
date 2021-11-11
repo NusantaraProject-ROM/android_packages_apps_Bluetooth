@@ -319,8 +319,9 @@ public class BluetoothInCallService extends InCallService {
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
             Log.i(TAG, "Bluetooth is off when unbind, disable BluetoothInCallService");
             AdapterService adapterService = AdapterService.getAdapterService();
-            adapterService.enableBluetoothInCallService(false);
-
+            if (adapterService != null) {
+                adapterService.enableBluetoothInCallService(false);
+            }
         }
         return super.onUnbind(intent);
     }

@@ -213,6 +213,8 @@ public class AdapterService extends Service {
 
     private final ArrayList<DiscoveringPackage> mDiscoveringPackages = new ArrayList<>();
 
+    private static final int TYPE_BREDR = 100;
+
     static {
         classInitNative();
     }
@@ -1206,6 +1208,23 @@ public class AdapterService extends Service {
             BluetoothAdapter.getDefaultAdapter().disableBluetoothGetStateCache();
         }
 
+        @Override
+        public void setBondingInitiatedLocally(BluetoothDevice device, boolean localInitiated,
+                AttributionSource source) {}
+        @Override
+        public boolean isTwsPlusDevice(BluetoothDevice device,
+            AttributionSource attributionSource) { return false; }
+        @Override
+        public String getTwsPlusPeerAddress(BluetoothDevice device,
+            AttributionSource attributionSource) { return null; }
+        @Override
+        public void updateQuietModeStatus(boolean quietMode,
+            AttributionSource attributionSource) {}
+        @Override
+        public int getDeviceType(BluetoothDevice device, AttributionSource source)
+            { return TYPE_BREDR; }
+
+
         public void cleanup() {
             mService = null;
         }
@@ -1672,17 +1691,6 @@ public class AdapterService extends Service {
         }
 
         @Override
-        public void setBondingInitiatedLocally(BluetoothDevice device, boolean localInitiated) {
-            // don't check caller, may be called from system UI
-            AdapterService service = getService();
-            if (service == null) {
-                return;
-            }
-            service.setBondingInitiatedLocally(device,localInitiated);
-            return;
-        }
-
-        @Override
         public long getSupportedProfiles() {
             AdapterService service = getService();
             if (service == null) {
@@ -1804,6 +1812,11 @@ public class AdapterService extends Service {
             }
 
             return service.getRemoteName(device);
+        }
+
+        @Override
+        public boolean isBroadcastActive(AttributionSource attributionSource) {
+            return false;
         }
 
         @Override
@@ -2159,14 +2172,6 @@ public class AdapterService extends Service {
             return true;
         }
 
-        public boolean isTwsPlusDevice(BluetoothDevice device) {
-            return false;
-        }
-
-        public String getTwsPlusPeerAddress(BluetoothDevice device) {
-            return null;
-        }
-
         @Override
         public int getBatteryLevel(BluetoothDevice device, AttributionSource attributionSource) {
             Attributable.setAttributionSource(device, attributionSource);
@@ -2503,16 +2508,6 @@ public class AdapterService extends Service {
         }
 
         @Override
-        public void updateQuietModeStatus(boolean quietMode) {
-            AdapterService service = getService();
-            if (service == null) {
-                return;
-            }
-            service.updateQuietModeStatus(quietMode);
-        }
-
-
-        @Override
         public void onBrEdrDown(AttributionSource source) {
             AdapterService service = getService();
             if (service == null
@@ -2796,17 +2791,6 @@ public class AdapterService extends Service {
             return BluetoothDevice.BOND_NONE;
         }
         return deviceProp.getBondState();
-    }
-
-    void setBondingInitiatedLocally(BluetoothDevice device, boolean localInitiated) {
-        enforceCallingOrSelfPermission(BLUETOOTH_PERM, "Need BLUETOOTH permission");
-        DeviceProperties deviceProp = mRemoteDevices.getDeviceProperties(device);
-        if (deviceProp == null) {
-            return;
-        }
-        Log.w(TAG," localInitiated " + localInitiated);
-        deviceProp.setBondingInitiatedLocally(localInitiated);
-        return;
     }
 
     int getConnectionState(BluetoothDevice device) {
@@ -3324,12 +3308,6 @@ public class AdapterService extends Service {
 
     public int getTotalNumOfTrackableAdvertisements() {
         return mAdapterProperties.getTotalNumOfTrackableAdvertisements();
-    }
-
-    void updateQuietModeStatus(boolean quietMode) {
-        debugLog("updateQuietModeStatus()-updateQuietModeStatus called with quiet mode status:"
-                   + quietMode);
-        mQuietmode = quietMode;
     }
 
     private static int convertScanModeToHal(int mode) {
